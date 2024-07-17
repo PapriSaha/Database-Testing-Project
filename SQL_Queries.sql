@@ -1,4 +1,4 @@
-//Example-1
+///Example-1
 
 CREATE TABLE Employee (
  EmpId int,
@@ -65,6 +65,10 @@ SELECT EmpId, City, ManagerId FROM Employee WHERE City='Mumbai' AND ManagerID='8
 //8. Write an SQL query to fetch all those employees who work on Project other than P1.
 
 SELECT * FROM Salary WHERE project <>'P1'
+
+//Another way
+
+SELECT * FROM Salary where NOT project = 'P1'
 
 //9. Write an SQL query to fetch the EmpID, Name, City, and Salary of employees by joining the Employee and Salary tables on the EmpID field.
 
@@ -140,7 +144,9 @@ SELECT MAX(Salary) AS SecondHighestSalary
 FROM Salary 
 WHERE Salary < (SELECT MAX(Salary) FROM Salary);
 
-//Example-2
+
+
+///Example-2
 
 CREATE TABLE LOCATION (
  LOCATION_ID INT,
@@ -205,6 +211,243 @@ INSERT INTO DEPARTMENT VALUES
  (7506, 'DENNIS', 'LYNN', 'S', 671, 7839, '1985-05-15', 2750, NULL, 30),
  (7507, 'BAKER', 'LESLIE', 'D', 671, 7839, '1985-06-10', 2200, NULL, 40),
  (7521, 'WARK', 'CYNTHIA', 'D', 670, 7698, '1985-02-22', 1250, NULL, 40);
+
+
+// 1. List out the employees who are not receiving the commission.
+  
+SELECT * from EMPLOYEE 
+where COMM is NULL;
+
+//2. List out the employees who are working in department 30 and draw the salaries of more than 1500.
+
+SELECT * from Employee 
+where department_id= 30 AND salary > 1500
+
+//3. List out the employee id, name in descending order based on the salary column.
+
+SELECT employee_id, first_name, salary from Employee 
+order by salary DESC
+
+//4. How many employees, who are working in different departments, are wise in the organization.
+
+SELECT department_id, COUNT(*) as TotalEmployee_Department from EMPLOYEE
+GROUP BY department_id;
+
+//5. List out the department id having at least 3 employees.
+
+SELECT department_id, COUNT(*) as NumberOfEmployees from EMPLOYEE
+GROUP BY department_id having count(*)>=3;
+
+//6. Display the employees who are working in the Research department.
+
+SELECT * from Employee 
+where department_id IN (select department_id from DEPARTMENT where name= 'Research')
+
+//7. Display the employees who got the maximum salary.
+
+SELECT * from Employee 
+where salary= (select max(salary) from Employee)
+
+//8. Display the employees who are working in “Boston”.
+
+SELECT * from EMPLOYEE 
+where DEPARTMENT_ID = (select DEPARTMENT_ID from DEPARTMENT 
+where LOCATION_ID = (select LOCATION_ID from LOCATION where REGIONAL_GROUP= 'BOSTON'))
+
+//Another way
+
+SELECT * FROM EMPLOYEE e
+JOIN Department d 
+ON e.DEPARTMENT_ID = d.department_id
+JOIN Location l 
+ON d.LOCATION_ID = l.Location_id where l.regional_group='BOSTON'
+
+//9. Update the employees’ salaries, who are working as Manager on the basis of 10%.
+
+UPDATE EMPLOYEE 
+set salary = salary + (salary * 10/100)
+where job_id=(SELECT job_id from JOB
+WHERE[Function_Job] = 'MANAGER');
+
+ 
+SELECT first_name, job_id, salary from EMPLOYEE
+where job_id=(SELECT job_id from JOB
+WHERE[Function_Job] = 'MANAGER')
+
+//10. Delete the employees who are working in the Operations department.
+
+DELETE from EMPLOYEE
+where department_id = (SELECT department_id from DEPARTMENT
+where name = 'OPERATIONS');
+
+Select e.employee_id, e.first_name, e.department_id, d.name from EMPLOYEE e
+Join DEPARTMENT d 
+On e.department_id= d.department_id;
+
+//11. Insert the employees who belong to the previous deleted 'OPERATIONS' department from a backup source into Employee table.
+
+INSERT INTO EMPLOYEE (employee_id, last_name, first_name, middle_name, job_id, manager_id, hire_date, salary, comm, department_id)
+SELECT e.employee_id, e.last_name, e.first_name, e.middle_name, e.job_id, e.manager_id, e.hire_date, e.salary, e.comm, e.department_id
+FROM Backup_EMPLOYEES e
+JOIN DEPARTMENT d 
+ON e.department_id = d.department_id
+WHERE d.name = 'OPERATIONS';
+
+//12. Write an SQL query to fetch all the DepartmentID’s which are present in either of the tables- ‘Employee’ and ‘Department’.
+
+SELECT department_id from EMPLOYEE
+UNION 
+SELECT department_id from DEPARTMENT
+
+SELECT department_id from EMPLOYEE
+UNION ALL
+SELECT department_id from DEPARTMENT
+
+
+//13. Write an SQL query to fetch common records between two tables.
+
+SELECT department_id from EMPLOYEE
+INTERSECT
+SELECT department_id from DEPARTMENT
+
+
+//14. Write an SQL query to fetch records that are present in one table but not in another table.
+
+SELECT job_id from Employee 
+MINUS 
+SELECT job_id from JOB
+
+//15. Create a table from the existing table (only structure without data).
+
+SELECT * INTO JOB_NEW
+FROM JOB
+WHERE 1 = 0;
+
+//16. Write an SQL query to find the current date.
+
+select getdate() as CurrentDate;
+
+
+
+///Example-3
+
+Create table Products ( 
+  product_id INT IDENTITY (1,1) PRIMARY KEY,
+  product_name VARCHAR(255) NOT NULL,
+  brand_id INT NOT NULL,
+  category_id INT NOT NULL,
+  model_year SMALLINT NOT NULL,
+  list_price DECIMAL(10,2) NOT NULL,
+  );
+  
+  CREATE TABLE product_audits(
+    change_id INT IDENTITY PRIMARY KEY,
+    product_id INT NOT NULL,
+    product_name VARCHAR(255) NOT NULL,
+    brand_id INT NOT NULL,
+    category_id INT NOT NULL,
+    model_year SMALLINT NOT NULL,
+    list_price DEC(10,2) NOT NULL,
+    updated_at DATETIME NOT NULL,
+    operation CHAR(3) NOT NULL,
+    CHECK(operation ='INS' or operation='DEL')
+    );
+    
+ //Trigger Creation
+
+    CREATE TRIGGER trg_product_audit
+    ON Products
+    AFTER INSERT, DELETE
+    AS
+    BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO product_audits(
+      product_id,
+      product_name,
+      brand_id,
+      category_id,
+      model_year,
+      list_price,
+      updated_at,
+      operation)
+ SELECT
+      i.product_id,
+      product_name,
+      brand_id,
+      category_id,
+      model_year,
+      i.list_price,
+      GETDATE(),
+      'INS'
+ FROM
+      inserted i
+      
+   UNION ALL
+   SELECT 
+      d.product_id,
+      product_name,
+      brand_id,
+      category_id,
+      model_year,
+      d.list_price,
+      GETDATE(),
+      'DEL'
+  FROM
+  deleted d;
+END
+
+
+//Insert Products
+
+INSERT Into products(
+  product_name,
+  brand_id,
+  category_id,
+  model_year,
+  list_price
+)
+VALUES(
+  'Test product',
+  1,
+  1,
+  2018,
+  599
+);
+
+//Show Products
+
+select * from products
+
+//DELETE Products 
+
+delete from Products
+where product_id=1
+
+//Show Product_audits Table
+
+select * from product_audits
+
+//To show how many triggers in database table
+
+SELECT 
+   name,
+   is_instead_of_trigger 
+FROM
+    sys.triggers
+WHERE
+ type='TR';
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
