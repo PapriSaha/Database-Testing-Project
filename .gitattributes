@@ -1,4 +1,5 @@
-*.sql linguist-language=SQL
-public/* linguist-vendored
-scot-ui/public/* linguist-vendored
-*.md linguist-documentation
+* text=auto eol=lf
+.bat text eol=crlf
+*.{png,jpg,jpeg,gif,webp,woff,woff2} binary
+test/** linguist-vendored=false
+*.sql linguist-language=SQL linguist-detectable
