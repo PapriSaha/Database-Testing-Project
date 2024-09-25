@@ -2,3 +2,8 @@
 public/* linguist-vendored
 scot-ui/public/* linguist-vendored
 *.md linguist-documentation
+*.html linguist-vendored
+*.css linguist-vendored
+*.js linguist-vendored
+*.json linguist-vendored
+*.xml linguist-vendored
