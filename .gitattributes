@@ -1,0 +1,4 @@
+*.sql linguist-language=SQL
+public/* linguist-vendored
+scot-ui/public/* linguist-vendored
+*.md linguist-documentation
